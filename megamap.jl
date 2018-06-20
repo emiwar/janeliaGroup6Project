@@ -53,8 +53,8 @@ function fInhibition(f::Vector, targetMap::TargetMap)
 end
 
 function fProjection(x::Number, fBar::Vector, W::Matrix, targetMap::TargetMap)
-    #targetMap.fPeak * max.(0, W*fBar - fInhibition(fBar, targetMap) + input(x, targetMap))
-    targetMap.fPeak * max.(0, W*fBar - targetMap.u0 + input(x, targetMap))
+    targetMap.fPeak * max.(0, W*fBar - fInhibition(fBar, targetMap) + input(x, targetMap))
+    #targetMap.fPeak * max.(0, W*fBar - targetMap.u0 + input(x, targetMap))
 end
 
 
@@ -86,3 +86,24 @@ function computeW(targetMap::TargetMap, learningRegion, s::Number, tol::Number)
     return W
 end
 
+struct ForwardMap
+    fPeak::Float64
+    inhibThres::Float64
+    wI::Float64
+    W::Matrix{Float64}
+end
+
+ForwardMap(targetMap::TargetMap, W::Matrix{Float64}) = ForwardMap(targetMap.fPeak, targetMap.inhibThres, targetMap.wI, W)
+
+function simulate(network::ForwardMap, input::Vector{Float64})
+    N = size(network.W, 1)
+    V = zeros(N)
+    dt = 0.01
+    for t=1:1000
+        f = network.fPeak * max.(0,V)
+        fI = max(0, sum(f) - network.inhibThres)
+        println(mean(f))
+        V += dt * (-V + network.W*f - network.wI * sum(fI) + input) 
+    end
+    return V
+end
