@@ -65,18 +65,17 @@ function fProjection(x::Number, fBar::Vector, W::Matrix, targetMap::TargetMap)
 end
 
 
-function computeW(targetMap::TargetMap, learningRegion, s::Number, tol::Number)
+function computeW(targetMap::TargetMap, learningRegion, s::Number; tol::Number=1, maxIter::Int64=20000)
     N = nCells(targetMap)
     W = zeros(N,N)
-    maxIter = 20000
+    fBar = fTarget.(learningRegion, targetMap)
     for it=1:maxIter
         deltaW = zeros(N, N)
-        for x in learningRegion
-            fBar = fTarget(x, targetMap)
-            fProj = fProjection(x, fBar, W, targetMap)
+        for x_i in 1:length(learningRegion)
+            fProj = fProjection(learningRegion[x_i], fBar[x_i], W, targetMap)
             for j=1:N, k=1:N
                 if j!=k
-                    deltaW[j, k] += (fProj[j] - fBar[j])*fBar[k]
+                    deltaW[j, k] += (fProj[j] - fBar[x_i][j])*fBar[x_i][k]
                 end
             end
         end
