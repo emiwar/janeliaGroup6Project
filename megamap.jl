@@ -22,6 +22,13 @@ function TargetMap(nCells::Int64, allPlaceCenters::Vector{Float64}; placeWidth=5
     return targetMap
 end
 
+function TargetMap(placeCenters::Vector{Vector{Float64}}; placeWidth=5.0, u0=.2, fPeak=15.0, IPeak=0.3)
+    targetMap = TargetMap(placeWidth, u0, fPeak, 0.0, IPeak, 0.0, placeCenters)
+    targetMap.inhibThres = mean(0.9*sum(fTarget(c, targetMap)) for c in vcat(placeCenters...))
+    targetMap.wI = targetMap.u0 / (targetMap.inhibThres*(1/0.9 - 1))
+    return targetMap
+end
+
 nCells(targetMap::TargetMap) = length(targetMap.placeCenters)
 
 function uTune(d::Float64, targetMap::TargetMap)
@@ -61,23 +68,20 @@ end
 function computeW(targetMap::TargetMap, learningRegion, s::Number, tol::Number)
     N = nCells(targetMap)
     W = zeros(N,N)
-    maxIter = 10000
-    i = 0
-    while i<maxIter
-        i+=1
+    maxIter = 20000
+    for it=1:maxIter
         deltaW = zeros(N, N)
         for x in learningRegion
             fBar = fTarget(x, targetMap)
             fProj = fProjection(x, fBar, W, targetMap)
             for j=1:N, k=1:N
-                if j==k
-                    continue
+                if j!=k
+                    deltaW[j, k] += (fProj[j] - fBar[j])*fBar[k]
                 end
-                deltaW[j, k] += (fProj[j] - fBar[j])*fBar[k]
             end
         end
         W += s*deltaW
-        println(sum(deltaW.^2))
+        println(now(), ", ", sum(deltaW.^2))
         #break
         if sum(deltaW.^2)<tol
             break
@@ -102,7 +106,6 @@ function simulate(network::ForwardMap, input::Vector{Float64})
     for t=1:1000
         f = network.fPeak * max.(0,V)
         fI = max(0, sum(f) - network.inhibThres)
-        println(mean(f))
         V += dt * (-V + network.W*f - network.wI * sum(fI) + input) 
     end
     return V
