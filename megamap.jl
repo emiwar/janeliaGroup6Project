@@ -69,18 +69,21 @@ function computeW(targetMap::TargetMap, learningRegion, s::Number; tol::Number=1
     N = nCells(targetMap)
     W = zeros(N,N)
     fBar = fTarget.(learningRegion, targetMap)
+    inp = input.(learningRegion, targetMap)
+    inhib = fInhibition.(fBar, targetMap)
     for it=1:maxIter
         deltaW = zeros(N, N)
         for x_i in 1:length(learningRegion)
-            fProj = fProjection(learningRegion[x_i], fBar[x_i], W, targetMap)
-            for j=1:N, k=1:N
-                if j!=k
-                    deltaW[j, k] += (fProj[j] - fBar[x_i][j])*fBar[x_i][k]
-                end
+            #fProj = fProjection(learningRegion[x_i], fBar[x_i], W, targetMap)
+            fProj = targetMap.fPeak * max.(0, W*fBar - inhib[x_i] + inp[x_i])
+            deltaW += (fProj[j] - fBar[x_i])*(fBar[x_i]')
+            for j=1:N
+                deltaW[j,j] = 0
             end
         end
         W += s*deltaW
         println(now(), ", ", sum(deltaW.^2))
+        flush(STDOUT)
         #break
         if sum(deltaW.^2)<tol
             break
