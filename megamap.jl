@@ -75,8 +75,8 @@ function computeW(targetMap::TargetMap, learningRegion, s::Number; tol::Number=1
         deltaW = zeros(N, N)
         for x_i in 1:length(learningRegion)
             #fProj = fProjection(learningRegion[x_i], fBar[x_i], W, targetMap)
-            fProj = targetMap.fPeak * max.(0, W*fBar - inhib[x_i] + inp[x_i])
-            deltaW += (fProj[j] - fBar[x_i])*(fBar[x_i]')
+            fProj = targetMap.fPeak * max.(0, W*fBar[x_i] - inhib[x_i] + inp[x_i])
+            deltaW += (fProj - fBar[x_i])*(fBar[x_i]')
         end
         for j=1:N
             deltaW[j,j] = 0

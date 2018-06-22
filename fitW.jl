@@ -3,7 +3,7 @@ include("megamap.jl")
 
 
 placeWidth = 50.0
-learningRate = 1e-6
+learningRate = 3e-7
 
 
 function convToJulia(arr)
@@ -20,6 +20,6 @@ vars = MAT.matread("place_field_data.mat")
 placeCenters = convToJulia.(vars["PF_centers"])[:,1];
 
 targetMap = TargetMap(placeCenters; placeWidth=placeWidth)
-W = computeW(targetMap, 50:10:3950, -learningRate; maxIter=25000)
+W = computeW(targetMap, 50:500:3950, -learningRate; maxIter=20)
 
-Mat.matwrite("fittedW.mat", Dict("fittedW" => W))
+MAT.matwrite("fittedW_5m_grid.mat", Dict("fittedW" => W))
