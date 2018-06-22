@@ -1,3 +1,5 @@
+println("Starting julia...")
+
 import MAT
 include("megamap.jl")
 
@@ -18,7 +20,7 @@ end
 
 vars = MAT.matread("place_field_data.mat")
 placeCenters = convToJulia.(vars["PF_centers"])[:,1];
-
+println("Done loading data!")
 
 
 targetMap = TargetMap(placeCenters; placeWidth=placeWidth)
