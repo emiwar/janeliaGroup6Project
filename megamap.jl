@@ -101,14 +101,16 @@ end
 
 ForwardMap(targetMap::TargetMap, W::Matrix{Float64}) = ForwardMap(targetMap.fPeak, targetMap.inhibThres, targetMap.wI, W)
 
-function simulate(network::ForwardMap, input::Vector{Float64})
+function simulate(network::ForwardMap, input::Vector{Float64}; timesteps::Int64 = 1000)
     N = size(network.W, 1)
     V = zeros(N)
     dt = 0.01
-    for t=1:1000
+    fPerStep = Array{Float64, 2}(timesteps, N)
+    for t=1:timesteps
         f = network.fPeak * max.(0,V)
         fI = max(0, sum(f) - network.inhibThres)
-        V += dt * (-V + network.W*f - network.wI * sum(fI) + input) 
+        V += dt * (-V + network.W*f - network.wI * sum(fI) + input)
+        fPerStep[t, :] = f
     end
-    return V
+    return fPerStep
 end
