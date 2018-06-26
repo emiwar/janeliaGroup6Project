@@ -65,9 +65,9 @@ function fProjection(x::Number, fBar::Vector, W::Matrix, targetMap::TargetMap)
 end
 
 
-function computeW(targetMap::TargetMap, learningRegion, s::Number; tol::Number=1, maxIter::Int64=20000)
+function computeW(targetMap::TargetMap, learningRegion, s::Number; tol::Number=1, maxIter::Int64=20000, initSigma::Float64=0)
     N = nCells(targetMap)
-    W = zeros(N,N)
+    W = initSigma * randn(N,N)
     fBar = fTarget.(learningRegion, targetMap)
     inp = input.(learningRegion, targetMap)
     inhib = fInhibition.(fBar, targetMap)
@@ -110,7 +110,7 @@ function simulate!(network::ForwardMap, input::Vector{Float64}; timesteps::Int64
     for t=1:timesteps
         f = network.fPeak * max.(0,network.V)
         fI = max(0, sum(f) - network.inhibThres)
-        network.V += dt * (-network.V + network.W*f - network.wI * sum(fI) + input) + sqrt(dt)*noise_s*rand(N)
+        network.V += dt * (-network.V + network.W*f - network.wI * sum(fI) + input) + sqrt(dt)*noise_s*randn(N)
         fPerStep[t, :] = f
     end
     return fPerStep
