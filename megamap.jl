@@ -92,23 +92,26 @@ function computeW(targetMap::TargetMap, learningRegion, s::Number; tol::Number=1
     return W
 end
 
-struct ForwardMap
+mutable struct ForwardMap
     fPeak::Float64
     inhibThres::Float64
     wI::Float64
     W::Matrix{Float64}
+    V::Vector{Float64}
 end
 
-ForwardMap(targetMap::TargetMap, W::Matrix{Float64}) = ForwardMap(targetMap.fPeak, targetMap.inhibThres, targetMap.wI, W)
+ForwardMap(targetMap::TargetMap, W::Matrix{Float64}) = ForwardMap(targetMap.fPeak, targetMap.inhibThres, targetMap.wI, W, zeros(size(W,1)))
 
-function simulate(network::ForwardMap, input::Vector{Float64})
+function simulate!(network::ForwardMap, input::Vector{Float64}; timesteps::Int64 = 1000)
     N = size(network.W, 1)
-    V = zeros(N)
+    #V = zeros(N)
     dt = 0.01
-    for t=1:1000
-        f = network.fPeak * max.(0,V)
+    fPerStep = Array{Float64, 2}(timesteps, N)
+    for t=1:timesteps
+        f = network.fPeak * max.(0,network.V)
         fI = max(0, sum(f) - network.inhibThres)
-        V += dt * (-V + network.W*f - network.wI * sum(fI) + input) 
+        network.V += dt * (-network.V + network.W*f - network.wI * sum(fI) + input)
+        fPerStep[t, :] = f
     end
-    return V
+    return fPerStep
 end
