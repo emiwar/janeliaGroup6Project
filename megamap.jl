@@ -75,8 +75,8 @@ function computeW(targetMap::TargetMap, learningRegion, s::Number; tol::Number=1
         deltaW = zeros(N, N)
         for x_i in 1:length(learningRegion)
             #fProj = fProjection(learningRegion[x_i], fBar[x_i], W, targetMap)
-            fProj = targetMap.fPeak * max.(0, W*fBar[x_i] - inhib[x_i] + inp[x_i])
-            deltaW += (fProj - fBar[x_i])*(fBar[x_i]')
+            fProj = targetMap.fPeak * max.(0, W*fBar - inhib[x_i] + inp[x_i])
+            deltaW += (fProj[j] - fBar[x_i])*(fBar[x_i]')
         end
         for j=1:N
             deltaW[j,j] = 0
@@ -102,7 +102,7 @@ end
 
 ForwardMap(targetMap::TargetMap, W::Matrix{Float64}) = ForwardMap(targetMap.fPeak, targetMap.inhibThres, targetMap.wI, W, zeros(size(W,1)))
 
-function simulate!(network::ForwardMap, input::Vector{Float64}; timesteps::Int64 = 1000)
+function simulate!(network::ForwardMap, input::Vector{Float64}; timesteps::Int64 = 1000, noise_s::Float64 = 0.0)
     N = size(network.W, 1)
     #V = zeros(N)
     dt = 0.01
@@ -110,7 +110,7 @@ function simulate!(network::ForwardMap, input::Vector{Float64}; timesteps::Int64
     for t=1:timesteps
         f = network.fPeak * max.(0,network.V)
         fI = max(0, sum(f) - network.inhibThres)
-        network.V += dt * (-network.V + network.W*f - network.wI * sum(fI) + input)
+        network.V += dt * (-network.V + network.W*f - network.wI * sum(fI) + input) + sqrt(dt)*noise_s*rand(N)
         fPerStep[t, :] = f
     end
     return fPerStep
