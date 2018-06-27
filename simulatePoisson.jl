@@ -11,7 +11,7 @@ function convToJulia(arr)
     end
 end
 
-predictedW = matread("./poissonPlaceFields/trial1.mat")
+predictedW = matread("./poissonPlaceFields/trial" * ARGS[1] * ".mat")
 placeCenters = convToJulia.(predictedW["placeCenters"]);
 targetMap = TargetMap(placeCenters; placeWidth=50.0);
 W = predictedW["fittedW"]
@@ -25,8 +25,8 @@ for x=50:10:3950
     forwardMap = ForwardMap(targetMap.fPeak, targetMap.inhibThres, targetMap.wI, W, zeros(size(W, 1)));
     target = fTarget(x, targetMap);
     inp = input(x, targetMap);
-    fIntermediate = simulate!(forwardMap, inp; timesteps=1500, noise_s=0.00)
-    fEnd = simulate!(forwardMap, zeros(size(W, 1)); timesteps=1500, noise_s=0.00);
+    fIntermediate = simulate!(forwardMap, inp; timesteps=1500, noise_s=0.05)
+    fEnd = simulate!(forwardMap, zeros(size(W, 1)); timesteps=1500, noise_s=0.05);
     push!(targets, target)
     push!(fEnds, fEnd[end,:])
     push!(fIntermediates, fIntermediate[end,:])
@@ -38,8 +38,8 @@ finalCorrs = [cor(fEnds[i], targets[j]) for i=1:nPoints, j=1:nPoints];
 
 predErr = 50.0*[indmax(finalCorrs[:,i]) - i for i=1:size(finalCorrs, 1)]
 
-MAT.matwrite("./poissonPlaceFields/simTrial1.mat", Dict("W" => W, "placeCenters" => predictedW["placeCenters"],
+MAT.matwrite("./poissonPlaceFields/simTrial" * ARGS[1] * ".mat", Dict("W" => W, "placeCenters" => predictedW["placeCenters"],
                                     "placeWidth" => 50.0, "fEnds" => hcat(fEnds...), "fIntermediates" => hcat(fIntermediates...),
                                     "targets" => hcat(targets...), "xPos"=> collect(50:10:3950),
                                     "intermediateCorrs" => intermediateCorrs,
-                                    "finalCorrs" => finalCorrs, "predErr" => predErr))
+                                    "finalCorrs" => finalCorrs, "predErr" => predErr, "noiseLevel" => 0.05))
