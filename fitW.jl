@@ -2,7 +2,7 @@ import MAT
 include("megamap.jl")
 
 
-placeWidth = 25.0
+placeWidth = 50.0
 learningRate = 1e-7
 
 
@@ -21,6 +21,6 @@ placeCenters = convToJulia.(vars["PF_centers"])[:,1];
 
 targetMap = TargetMap(placeCenters; placeWidth=placeWidth)
 evalPoints = 50:10:3950
-W = computeW(targetMap, evalPoints, -learningRate; maxIter=20000)
+W = computeW(targetMap, evalPoints, -learningRate; maxIter=200000, initSigma=0.0)
 
-MAT.matwrite("fittedW_1dm_grid_25cmwidth.mat", Dict("fittedW" => W, "evaluationPoints" => collect(evalPoints), "placeWidth" => placeWidth, "learningRate" => learningRate, "placeCenters" => placeCenters, "maxIter" => 20000))
+MAT.matwrite("fittedW_1dm_grid_many_iters.mat", Dict("fittedW" => W, "evaluationPoints" => collect(evalPoints), "placeWidth" => placeWidth, "learningRate" => learningRate, "placeCenters" => placeCenters, "maxIter" => 200000))
